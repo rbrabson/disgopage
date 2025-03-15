@@ -75,11 +75,21 @@ func (m *message) disable() error {
 	embeds := []*discordgo.MessageEmbed{m.makeEmbed()}
 	components := []discordgo.MessageComponent{m.makeComponent(true)}
 
-	session := m.paginator.config.DiscordConfig.Session
-	_, err := session.InteractionResponseEdit(m.interaction, &discordgo.WebhookEdit{
-		Embeds:     &embeds,
-		Components: &components,
-	})
+	var err error
+	s := m.paginator.config.DiscordConfig.Session
+	if m.interaction != nil {
+		_, err = s.InteractionResponseEdit(m.interaction, &discordgo.WebhookEdit{
+			Embeds:     &embeds,
+			Components: &components,
+		})
+	} else {
+		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Channel:    m.channelID,
+			ID:         m.messageID,
+			Embeds:     &embeds,
+			Components: &components,
+		})
+	}
 	if err != nil {
 		log.WithFields(log.Fields{"paginator": m.id, "channel": m.channelID, "error": err}).Error("error disabling paginated message")
 		return err
