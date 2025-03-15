@@ -38,7 +38,7 @@ func NewPaginator(opts ...ConfigOpt) *Paginator {
 
 // createInteractionResponse creates and sends a message with the paginator's content.
 func (p *Paginator) CreateInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, title string, embedFields []*discordgo.MessageEmbedField, ephemeral ...bool) error {
-	m := newInteractionResponse(p, title, embedFields)
+	m := newMessage(p, title, embedFields)
 	m.id = fmt.Sprintf("%s-%d", i.ChannelID, time.Now().UnixNano())
 	m.interaction = i.Interaction
 	m.ephemeral = len(ephemeral) > 0 && ephemeral[0]
@@ -70,6 +70,42 @@ func (p *Paginator) CreateInteractionResponse(s *discordgo.Session, i *discordgo
 		return err
 	}
 	log.WithFields(log.Fields{"paginator": p.id, "message": m.id, "channel": i.ChannelID}).Debug("created paginated message")
+	return nil
+}
+
+// createInteractionResponse creates and sends a message with the paginator's content.
+func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, title string, embedFields []*discordgo.MessageEmbedField, ephemeral ...bool) error {
+	m := newMessage(p, title, embedFields)
+	m.id = fmt.Sprintf("%s-%d", channelID, time.Now().UnixNano())
+	m.channelID = channelID
+	m.ephemeral = len(ephemeral) > 0 && ephemeral[0]
+	var flags discordgo.MessageFlags
+	if m.ephemeral {
+		flags = discordgo.MessageFlagsEphemeral
+	}
+	p.mutex.Lock()
+	p.messages[m.id] = m
+	p.mutex.Unlock()
+
+	embeds := []*discordgo.MessageEmbed{m.makeEmbed()}
+	components := []discordgo.MessageComponent{m.makeComponent(false)}
+	m.registerComponentHandlers()
+
+	message, err := s.ChannelMessageSendComplex(m.channelID, &discordgo.MessageSend{
+		Embeds:     embeds,
+		Components: components,
+		Flags:      flags,
+	})
+	m.messageID = message.ID
+	if err != nil {
+		log.WithFields(log.Fields{"paginator": p.id, "message": m.id, "channel": channelID, "error": err}).Error("error sending paginated message")
+		m.deregisterComponentHandlers()
+		p.mutex.Lock()
+		delete(p.messages, m.id)
+		p.mutex.Unlock()
+		return err
+	}
+	log.WithFields(log.Fields{"paginator": p.id, "message": m.id, "channel": channelID}).Debug("created paginated message")
 	return nil
 }
 
