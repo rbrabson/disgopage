@@ -74,15 +74,10 @@ func (p *Paginator) CreateInteractionResponse(s *discordgo.Session, i *discordgo
 }
 
 // createInteractionResponse creates and sends a message with the paginator's content.
-func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, title string, embedFields []*discordgo.MessageEmbedField, ephemeral ...bool) error {
+func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, title string, embedFields []*discordgo.MessageEmbedField) error {
 	m := newMessage(p, title, embedFields)
 	m.id = fmt.Sprintf("%s-%d", channelID, time.Now().UnixNano())
 	m.channelID = channelID
-	m.ephemeral = len(ephemeral) > 0 && ephemeral[0]
-	var flags discordgo.MessageFlags
-	if m.ephemeral {
-		flags = discordgo.MessageFlagsEphemeral
-	}
 	p.mutex.Lock()
 	p.messages[m.id] = m
 	p.mutex.Unlock()
@@ -94,7 +89,6 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, title 
 	message, err := s.ChannelMessageSendComplex(m.channelID, &discordgo.MessageSend{
 		Embeds:     embeds,
 		Components: components,
-		Flags:      flags,
 	})
 	m.messageID = message.ID
 	if err != nil {

@@ -179,7 +179,6 @@ func (m *message) registerComponentHandlers() {
 	if cfg.ButtonsConfig.First != nil {
 		buttonID := m.customButtonID("first")
 		cfg.DiscordConfig.AddComponentHandler(buttonID, pageResponse)
-		log.Warningf("registered component handler for first button; id=%s", buttonID)
 	}
 	if cfg.ButtonsConfig.Back != nil {
 		buttonID := m.customButtonID("back")

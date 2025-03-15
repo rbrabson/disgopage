@@ -114,6 +114,17 @@ func main() {
 	dg.Open()
 	defer dg.Close()
 
+	p := page.NewPaginator(
+		page.WithDiscordConfig(
+			page.DiscordConfig{
+				Session:                dg,
+				AddComponentHandler:    addComponentHandler,
+				RemoveComponentHandler: removeComponentHandler,
+			},
+		),
+	)
+	p.CreateMessage(dg, "1135713066164703232", "Paginator Using CreateMessage", embeds)
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	log.Info("Press Ctrl+C to exit")
@@ -131,7 +142,7 @@ func paginator(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		),
 	)
-	p.CreateInteractionResponse(s, i, "Paginator Example", embeds, true)
+	p.CreateInteractionResponse(s, i, "Paginator Using CreateInteractionResponse", embeds, true)
 }
 
 func addComponentHandler(key string, handler func(*discordgo.Session, *discordgo.InteractionCreate)) {
