@@ -226,7 +226,6 @@ func (m *message) hasExpired() bool {
 func pageThroughItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	ids := strings.Split(i.Interaction.MessageComponentData().CustomID, ":")
 	paginatorID, messageID, action := ids[0], ids[1], ids[2]
-	log.WithFields(log.Fields{"paginator": paginatorID, "message": messageID, "action": action}).Debug("page through items")
 
 	manager.mutex.Lock()
 	paginator, ok := manager.paginators[paginatorID]
