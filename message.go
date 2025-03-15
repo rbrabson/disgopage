@@ -260,8 +260,7 @@ func pageThroughItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	m.editInteractionResponse(s, i)
 }
 
+// customButtonID returns the custom ID for a button in the paginator.
 func (m *message) customButtonID(buttonText string) string {
-	customID := fmt.Sprintf("%s:%s:%s", m.paginator.id, m.id, buttonText)
-	log.WithFields(log.Fields{"buttonText": buttonText, "customID": customID}).Debug("created custom button ID")
-	return customID
+	return fmt.Sprintf("%s:%s:%s", m.paginator.id, m.id, buttonText)
 }
