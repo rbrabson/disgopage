@@ -2,11 +2,11 @@ package disgopage
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	log "github.com/sirupsen/logrus"
 )
 
 // message represents a single message in the paginator. It contains the data
@@ -44,7 +44,11 @@ func (m *message) editMessage(s *discordgo.Session, i *discordgo.InteractionCrea
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
 	})
 	if err != nil {
-		log.WithFields(log.Fields{"paginator": m.id, "channel": m.channelID, "error": err}).Error("error deferring paginated message")
+		slog.Error("error deferring paginated message",
+			slog.String("paginator", m.id),
+			slog.String("channel", m.channelID),
+			slog.Any("error", err),
+		)
 	}
 
 	// Handle an interaction response or a message created by the paginator
@@ -62,11 +66,18 @@ func (m *message) editMessage(s *discordgo.Session, i *discordgo.InteractionCrea
 		})
 	}
 	if err != nil {
-		log.WithFields(log.Fields{"paginator": m.id, "channel": m.channelID, "error": err}).Error("error editing paginated message")
+		slog.Error("error editing paginated message",
+			slog.String("paginator", m.id),
+			slog.String("channel", m.channelID),
+			slog.Any("error", err),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{"paginator": m.id, "channel": m.channelID}).Debug("edited paginated message")
+	slog.Debug("edited paginated message",
+		slog.String("paginator", m.id),
+		slog.String("channel", m.channelID),
+	)
 	return nil
 }
 
@@ -91,11 +102,18 @@ func (m *message) disable() error {
 		})
 	}
 	if err != nil {
-		log.WithFields(log.Fields{"paginator": m.id, "channel": m.channelID, "error": err}).Error("error disabling paginated message")
+		slog.Error("error disabling paginated message",
+			slog.String("paginator", m.id),
+			slog.String("channel", m.channelID),
+			slog.Any("error", err),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{"paginator": m.id, "channel": m.channelID}).Debug("disabled paginated message")
+	slog.Debug("disabled paginated message",
+		slog.String("paginator", m.id),
+		slog.String("channel", m.channelID),
+	)
 	return nil
 }
 
@@ -206,7 +224,6 @@ func (m *message) registerComponentHandlers() {
 		buttonID := m.customButtonID("last")
 		cfg.DiscordConfig.AddComponentHandler(buttonID, pageResponse)
 	}
-	log.WithFields(log.Fields{"paginator": m.id}).Trace("registered component handlers")
 }
 
 // deregisterComponentHandlers deregisters the component handlers for the paginator.
@@ -232,7 +249,6 @@ func (m *message) deregisterComponentHandlers() {
 		buttonID := m.customButtonID("last")
 		cfg.DiscordConfig.RemoveComponentHandler(buttonID)
 	}
-	log.WithFields(log.Fields{"paginator": m.id}).Trace("deregistered component handlers")
 }
 
 // itemsPerPage returns the number of items per page. If the
@@ -256,7 +272,9 @@ func pageResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	paginator, ok := manager.paginators[paginatorID]
 	manager.mutex.Unlock()
 	if !ok {
-		log.WithFields(log.Fields{"paginator": paginatorID}).Error("paginator not found")
+		slog.Error("paginator not found",
+			slog.String("paginator", paginatorID),
+		)
 		return
 	}
 	paginator.mutex.Lock()

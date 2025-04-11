@@ -1,10 +1,9 @@
 package disgopage
 
 import (
+	"log/slog"
 	"sync"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -39,14 +38,19 @@ func (m *paginatorManager) addPaginator(paginator *Paginator) {
 	defer m.mutex.Unlock()
 
 	m.paginators[paginator.id] = paginator
-	log.WithFields(log.Fields{"paginator": paginator.id, "count": len(m.paginators)}).Debug("added paginator to manager")
+	slog.Debug("added paginator to manager",
+		slog.String("paginator", paginator.id),
+		slog.Int("count", len(m.paginators)),
+	)
 }
 
 // removePaginator removes a paginator from the manager and performs any necessary cleanup.
 // It contains the shared logic used by `Remove“ and `cleanup`.
 func (m *paginatorManager) removePaginator(p *Paginator) {
 	delete(m.paginators, p.id)
-	log.WithFields(log.Fields{"paginator": p.id}).Debug("removed paginator from manager")
+	slog.Debug("removed paginator from manager",
+		slog.String("paginator", p.id),
+	)
 }
 
 // cleanup removes expired paginators from the manager.
@@ -65,7 +69,6 @@ func (m *paginatorManager) startCleanup() {
 		ticker := time.NewTicker(time.Minute)
 		defer ticker.Stop()
 		for range ticker.C {
-			log.WithFields(log.Fields{"count": len(m.paginators)}).Trace("running paginator cleanup")
 			m.cleanup()
 		}
 	}()

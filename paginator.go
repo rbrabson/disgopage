@@ -2,11 +2,11 @@ package disgopage
 
 import (
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	log "github.com/sirupsen/logrus"
 )
 
 // Paginator represents a paginator that may be used to create paginated messages on a Discord server.
@@ -32,7 +32,10 @@ func NewPaginator(opts ...ConfigOpt) *Paginator {
 
 	p.manager.addPaginator(p)
 
-	log.WithFields(log.Fields{"itemsPerPage": p.config.ItemsPerPage, "idleWait": p.config.IdleWait}).Debug("created new paginator")
+	slog.Debug("created new paginator",
+		slog.Int("itemsPerPage", p.config.ItemsPerPage),
+		slog.Duration("idleWait", p.config.IdleWait),
+	)
 	return p
 }
 
@@ -62,14 +65,23 @@ func (p *Paginator) CreateInteractionResponse(s *discordgo.Session, i *discordgo
 		},
 	})
 	if err != nil {
-		log.WithFields(log.Fields{"paginator": p.id, "message": m.id, "channel": i.ChannelID, "error": err}).Error("error sending paginated message")
+		slog.Error("error sending paginated message",
+			slog.String("paginator", p.id),
+			slog.String("message", m.id),
+			slog.String("channel", i.ChannelID),
+			slog.Any("error", err),
+		)
 		m.deregisterComponentHandlers()
 		p.mutex.Lock()
 		delete(p.messages, m.id)
 		p.mutex.Unlock()
 		return err
 	}
-	log.WithFields(log.Fields{"paginator": p.id, "message": m.id, "channel": i.ChannelID}).Debug("created paginated message")
+	slog.Debug("created paginated message",
+		slog.String("paginator", p.id),
+		slog.String("message", m.id),
+		slog.String("channel", i.ChannelID),
+	)
 	return nil
 }
 
@@ -92,14 +104,23 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, title 
 	})
 	m.messageID = message.ID
 	if err != nil {
-		log.WithFields(log.Fields{"paginator": p.id, "message": m.id, "channel": channelID, "error": err}).Error("error sending paginated message")
+		slog.Error("error sending paginated message",
+			slog.String("paginator", p.id),
+			slog.String("message", m.id),
+			slog.String("channel", channelID),
+			slog.Any("error", err),
+		)
 		m.deregisterComponentHandlers()
 		p.mutex.Lock()
 		delete(p.messages, m.id)
 		p.mutex.Unlock()
 		return err
 	}
-	log.WithFields(log.Fields{"paginator": p.id, "message": m.id, "channel": channelID}).Debug("created paginated message")
+	slog.Debug("created paginated message",
+		slog.String("paginator", p.id),
+		slog.String("message", m.id),
+		slog.String("channel", channelID),
+	)
 	return nil
 }
 

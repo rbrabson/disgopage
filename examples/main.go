@@ -1,11 +1,10 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
@@ -82,14 +81,16 @@ func main() {
 	var err error
 	dg, err = discordgo.New("Bot " + Token)
 	if err != nil {
-		log.Fatal("error creating Discord session,", err)
-		return
+		slog.Error("error creating Discord session,",
+			slog.Any("error", err),
+		)
+		os.Exit(1)
 	}
 
 	dg.Identify.Intents = botIntents
 
 	dg.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		log.Info("Bot is up!")
+		slog.Info("Bot is up!")
 	})
 
 	commandHandlers["paginator"] = paginator
@@ -108,7 +109,12 @@ func main() {
 
 	_, err = dg.ApplicationCommandBulkOverwrite(AppID, "", commands)
 	if err != nil {
-		log.WithFields(log.Fields{"appID": AppID, "commands": commands, "error": err}).Fatal("failed to load bot commands")
+		slog.Error("failed to load bot commands",
+			slog.String("appID", AppID),
+			slog.Any("commands", commands),
+			slog.Any("error", err),
+		)
+		os.Exit(1)
 	}
 
 	dg.Open()
@@ -127,7 +133,7 @@ func main() {
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	log.Info("Press Ctrl+C to exit")
+	slog.Info("Press Ctrl+C to exit")
 	<-sc
 }
 
