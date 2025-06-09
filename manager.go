@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	manager *paginatorManager = newManager()
+	manager = newManager()
 )
 
 // paginatorManager is the main controller for the paginator. It contains the

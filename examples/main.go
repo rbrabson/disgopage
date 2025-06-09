@@ -72,8 +72,12 @@ var (
 )
 
 func init() {
-	godotenv.Load(".env_test")
-	Token = os.Getenv("DISCORD_BOT_TOKEN")
+	if err := godotenv.Load(".env_test"); err != nil {
+		slog.Error("Error loading .env file",
+			slog.Any("error", err),
+		)
+	}
+	os.Getenv("DISCORD_BOT_TOKEN")
 	AppID = os.Getenv("DISCORD_APP_ID")
 }
 
@@ -117,8 +121,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	dg.Open()
-	defer dg.Close()
+	if err := dg.Open(); err != nil {
+		slog.Error("error opening connection,",
+			slog.Any("error", err),
+		)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := dg.Close(); err != nil {
+			slog.Error("error closing Discord session",
+				slog.Any("error", err),
+			)
+		}
+	}()
 
 	p := page.NewPaginator(
 		page.WithDiscordConfig(
@@ -129,7 +144,11 @@ func main() {
 			},
 		),
 	)
-	p.CreateMessage(dg, "1135713066164703232", "Paginator Using CreateMessage", embeds)
+	if err := p.CreateMessage(dg, "1135713066164703232", "Paginator Using CreateMessage", embeds); err != nil {
+		slog.Error("error creating message",
+			slog.Any("error", err),
+		)
+	}
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
@@ -148,7 +167,11 @@ func paginator(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		),
 	)
-	p.CreateInteractionResponse(s, i, "Paginator Using CreateInteractionResponse", embeds, true)
+	if err := p.CreateInteractionResponse(s, i, "Paginator Using CreateInteractionResponse", embeds, true); err != nil {
+		slog.Error("error creating interaction response",
+			slog.Any("error", err),
+		)
+	}
 }
 
 func addComponentHandler(key string, handler func(*discordgo.Session, *discordgo.InteractionCreate)) {

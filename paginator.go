@@ -39,7 +39,7 @@ func NewPaginator(opts ...ConfigOpt) *Paginator {
 	return p
 }
 
-// createInteractionResponse creates and sends a message with the paginator's content.
+// CreateInteractionResponse creates and sends a message with the paginator's content.
 func (p *Paginator) CreateInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, title string, embedFields []*discordgo.MessageEmbedField, ephemeral ...bool) error {
 	m := newMessage(p, title, embedFields)
 	m.id = fmt.Sprintf("%s-%d", i.ChannelID, time.Now().UnixNano())
@@ -85,7 +85,7 @@ func (p *Paginator) CreateInteractionResponse(s *discordgo.Session, i *discordgo
 	return nil
 }
 
-// createInteractionResponse creates and sends a message with the paginator's content.
+// CreateMessage creates and sends a message with the paginator's content.
 func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, title string, embedFields []*discordgo.MessageEmbedField) error {
 	m := newMessage(p, title, embedFields)
 	m.id = fmt.Sprintf("%s-%d", channelID, time.Now().UnixNano())
@@ -102,7 +102,6 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, title 
 		Embeds:     embeds,
 		Components: components,
 	})
-	m.messageID = message.ID
 	if err != nil {
 		slog.Error("error sending paginated message",
 			slog.String("paginator", p.id),
@@ -116,6 +115,7 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, title 
 		p.mutex.Unlock()
 		return err
 	}
+	m.messageID = message.ID
 	slog.Debug("created paginated message",
 		slog.String("paginator", p.id),
 		slog.String("message", m.id),
@@ -130,7 +130,14 @@ func (p *Paginator) Close() {
 	defer p.mutex.Unlock()
 
 	for _, m := range p.messages {
-		m.disable()
+		if err := m.disable(); err != nil {
+			slog.Error("error disabling paginated message",
+				slog.String("paginator", m.id),
+				slog.String("message", m.id),
+				slog.String("channel", m.channelID),
+				slog.Any("error", err),
+			)
+		}
 		m.deregisterComponentHandlers()
 		delete(p.messages, m.id)
 	}
@@ -145,7 +152,14 @@ func (p *Paginator) cleanup() {
 
 	for _, m := range p.messages {
 		if m.hasExpired() {
-			m.disable()
+			if err := m.disable(); err != nil {
+				slog.Error("error disabling paginated message",
+					slog.String("paginator", m.id),
+					slog.String("message", m.id),
+					slog.String("channel", m.channelID),
+					slog.Any("error", err),
+				)
+			}
 			m.deregisterComponentHandlers()
 			delete(p.messages, m.id)
 		}

@@ -299,7 +299,12 @@ func pageResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	m.expiry = time.Now().Add(m.paginator.config.IdleWait)
-	m.editMessage(s, i)
+	if err := m.editMessage(s, i); err != nil {
+		slog.Error("error editing message",
+			slog.String("messageID", messageID),
+			slog.Any("error", err),
+		)
+	}
 }
 
 // customButtonID returns the custom ID for a button in the paginator.
