@@ -12,6 +12,7 @@ func TestNewPaginator(t *testing.T) {
 	// Verify the paginator was created correctly
 	if p == nil {
 		t.Errorf("Expected paginator to be created, got nil")
+		return
 	}
 	if p.id == "" {
 		t.Errorf("Expected paginator.id to be set")
@@ -118,14 +119,4 @@ func TestPaginatorCleanup(t *testing.T) {
 	if _, exists := p.messages["active-message"]; !exists {
 		t.Errorf("Expected active message to still exist")
 	}
-}
-
-// Mock implementation of hasExpired for testing
-func (m *message) hasExpired() bool {
-	return time.Now().After(m.expiry)
-}
-
-// Mock implementation of disable for testing
-func (m *message) disable() error {
-	return nil
 }

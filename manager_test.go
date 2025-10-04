@@ -11,6 +11,7 @@ func TestNewManager(t *testing.T) {
 	// Verify the manager was created correctly
 	if m == nil {
 		t.Errorf("Expected manager to be created, got nil")
+		return
 	}
 	if m.paginators == nil {
 		t.Errorf("Expected paginators map to be initialized")

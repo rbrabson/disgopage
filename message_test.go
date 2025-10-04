@@ -33,6 +33,7 @@ func TestNewMessage(t *testing.T) {
 	// Verify the message was created correctly
 	if msg == nil {
 		t.Errorf("Expected message to be created, got nil")
+		return
 	}
 	if msg.paginator != p {
 		t.Errorf("Expected message.paginator to be set correctly")
@@ -63,29 +64,29 @@ func TestPageCount(t *testing.T) {
 
 	// Test cases with different numbers of embed fields
 	testCases := []struct {
-		name           string
-		embedFields    []*discordgo.MessageEmbedField
-		expectedPages  int
+		name          string
+		embedFields   []*discordgo.MessageEmbedField
+		expectedPages int
 	}{
 		{
-			name:           "No fields",
-			embedFields:    []*discordgo.MessageEmbedField{},
-			expectedPages:  1, // Should have at least 1 page even with no fields
+			name:          "No fields",
+			embedFields:   []*discordgo.MessageEmbedField{},
+			expectedPages: 1, // Should have at least 1 page even with no fields
 		},
 		{
-			name:           "Exactly one page",
-			embedFields:    make([]*discordgo.MessageEmbedField, 5),
-			expectedPages:  1,
+			name:          "Exactly one page",
+			embedFields:   make([]*discordgo.MessageEmbedField, 5),
+			expectedPages: 1,
 		},
 		{
-			name:           "Partial second page",
-			embedFields:    make([]*discordgo.MessageEmbedField, 7),
-			expectedPages:  2,
+			name:          "Partial second page",
+			embedFields:   make([]*discordgo.MessageEmbedField, 7),
+			expectedPages: 2,
 		},
 		{
-			name:           "Multiple full pages",
-			embedFields:    make([]*discordgo.MessageEmbedField, 15),
-			expectedPages:  3,
+			name:          "Multiple full pages",
+			embedFields:   make([]*discordgo.MessageEmbedField, 15),
+			expectedPages: 3,
 		},
 	}
 
@@ -140,6 +141,7 @@ func TestMakeEmbed(t *testing.T) {
 	// Verify the embed properties
 	if embed == nil {
 		t.Errorf("Expected embed to be created, got nil")
+		return
 	}
 	if embed.Title != title {
 		t.Errorf("Expected embed.Title to be %s, got %s", title, embed.Title)
