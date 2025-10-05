@@ -57,6 +57,18 @@ type ComponentOption struct {
 	Style discordgo.ButtonStyle
 }
 
+func GetDefaultConfig() *config {
+	config := &config{
+		ButtonsConfig:  defaultConfig.ButtonsConfig,
+		CustomIDPrefix: defaultConfig.CustomIDPrefix,
+		EmbedColor:     defaultConfig.EmbedColor,
+		ItemsPerPage:   defaultConfig.ItemsPerPage,
+		DiscordConfig:  defaultConfig.DiscordConfig,
+		IdleWait:       defaultConfig.IdleWait,
+	}
+	return config
+}
+
 // ConfigOpt is a function that can be used to modify the paginator's configuration.
 type ConfigOpt func(config *config)
 

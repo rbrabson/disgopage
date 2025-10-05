@@ -20,11 +20,11 @@ type Paginator struct {
 
 // NewPaginator creates a new paginator.
 func NewPaginator(opts ...ConfigOpt) *Paginator {
-	config := defaultConfig
+	config := GetDefaultConfig()
 	config.Apply(opts)
 	p := &Paginator{
 		id:       fmt.Sprintf("paginator-%d", time.Now().UnixNano()),
-		config:   &config,
+		config:   config,
 		messages: make(map[string]*message),
 		mutex:    sync.Mutex{},
 		manager:  manager,
